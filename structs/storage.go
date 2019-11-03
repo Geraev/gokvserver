@@ -2,11 +2,8 @@ package structs
 
 type Storage interface {
 	GetKeys() []string
-
-	GetString(key string) (string, error)
-	GetList(key string) ([]string, error)
+	GetElement(key string) (interface{}, error)
 	GetListElement(key string, index int) (string, error)
-	GetDictionary(key string) (map[string]string, error)
 	GetDictionaryElement(key, keyInMap string) (string, error)
 
 	PutOrUpdateString(key, value string) (string, error)
