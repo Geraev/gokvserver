@@ -7,7 +7,7 @@ type Storage interface {
 	GetList(key string) ([]string, error)
 	GetListElement(key string, index int) (string, error)
 	GetDictionary(key string) (map[string]string, error)
-	GetDictionaryElement(key, keyInMap string) (map[string]string, error)
+	GetDictionaryElement(key, keyInMap string) (string, error)
 
 	PutOrUpdateString(key, value string) (string, error)
 	PutOrUpdateList(key, value []string) ([]string, error)
