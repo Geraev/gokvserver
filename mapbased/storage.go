@@ -3,6 +3,7 @@ package mapbased
 import (
 	"errors"
 	"sync"
+	"time"
 )
 
 type Storage struct {
@@ -33,14 +34,25 @@ func (s *Storage) GetKeys() []string {
 	return result
 }
 
-// TODO
-func (s *Storage) GetString(key string) (string, error) {
-	panic("implement me")
-}
+func (s *Storage) GetElement(key string) (interface{}, error) {
+	s.mx.RLock()
+	defer s.mx.RUnlock()
 
-// TODO
-func (s *Storage) GetList(key string) ([]string, error) {
-	panic("implement me")
+	val, ok := s.data[key]
+	if !ok {
+		return "", errors.New("key not found")
+	}
+
+	switch v := val.(type) {
+	case string:
+		return v, nil
+	case []string:
+		return v, nil
+	case map[string]string:
+		return v, nil
+	default:
+		return "", errors.New("something wrong: type error")
+	}
 }
 
 func (s *Storage) GetListElement(key string, index int) (string, error) {
@@ -68,11 +80,6 @@ func (s *Storage) GetListElement(key string, index int) (string, error) {
 	return v[index], nil
 }
 
-// TODO
-func (s *Storage) GetDictionary(key string) (map[string]string, error) {
-	panic("implement me")
-}
-
 func (s *Storage) GetDictionaryElement(key, keyInMap string) (string, error) {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
@@ -95,22 +102,63 @@ func (s *Storage) GetDictionaryElement(key, keyInMap string) (string, error) {
 	return item, nil
 }
 
-// TODO
-func (s *Storage) PutOrUpdateString(key, value string) (string, error) {
-	panic("implement me")
+// PutOrUpdateString добавляет либо обновляет значение ключа. Если ключь уже существовал, то перавым аргументом
+// возвращает предыдущее значение ключа, а вторым аргументом возвращает true
+ func (s *Storage) PutOrUpdateString(key, value string) (previousVal string, isUpdated bool) {
+	s.mx.Lock()
+	defer s.mx.Unlock()
+
+	if val, ok := s.data[key]; ok {
+		previousVal = val.(string)
+		isUpdated = ok
+	}
+	s.data[key] = value
+	return previousVal, isUpdated
 }
 
-// TODO
-func (s *Storage) PutOrUpdateList(key, value []string) ([]string, error) {
-	panic("implement me")
+// PutOrUpdateList добавляет либо обновляет значение ключа. Если ключь уже существовал, то перавым аргументом
+// возвращает предыдущее значение ключа, а вторым аргументом возвращает true
+func (s *Storage) PutOrUpdateList(key string, value []string) (previousVal []string, isUpdated bool) {
+	s.mx.Lock()
+	defer s.mx.Unlock()
+
+	if val, ok := s.data[key]; ok {
+		previousVal = val.([]string)
+		isUpdated = ok
+	}
+	s.data[key] = value
+	return previousVal, isUpdated
 }
 
-// TODO
-func (s *Storage) PutOrUpdateDictionary(key, value map[string]string) (map[string]string, error) {
-	panic("implement me")
+// PutOrUpdateDictionary добавляет либо обновляет значение ключа. Если ключь уже существовал, то перавым аргументом
+// возвращает предыдущее значение ключа, а вторым аргументом возвращает true
+func (s *Storage) PutOrUpdateDictionary(key string, value map[string]string) (previousVal map[string]string, isUpdated bool) {
+	s.mx.Lock()
+	defer s.mx.Unlock()
+
+	if val, ok := s.data[key]; ok {
+		previousVal = val.(map[string]string)
+		isUpdated = ok
+	}
+	s.data[key] = value
+	return previousVal, isUpdated
 }
 
-// TODO
-func (s *Storage) SetTTL(key string, keyTTL int) (string, error) {
-	panic("implement me")
+func (s *Storage) RemoveElement(key string) {
+	s.mx.Lock()
+	defer s.mx.Unlock()
+	delete(s.data, key)
+	return
+}
+
+func (s *Storage) SetTTL(key string, keyTTL int) {
+	if keyTTL <= 0 {
+		return
+	}
+	time.AfterFunc(time.Millisecond*time.Duration(keyTTL), func() {
+		s.mx.Lock()
+		delete(s.data, key)
+		s.mx.Unlock()
+	})
+	return
 }

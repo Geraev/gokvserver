@@ -6,9 +6,11 @@ type Storage interface {
 	GetListElement(key string, index int) (string, error)
 	GetDictionaryElement(key, keyInMap string) (string, error)
 
-	PutOrUpdateString(key, value string) (string, error)
-	PutOrUpdateList(key, value []string) ([]string, error)
-	PutOrUpdateDictionary(key, value map[string]string) (map[string]string, error)
+	PutOrUpdateString(key, value string) (string, bool)
+	PutOrUpdateList(key string, value []string) ([]string, bool)
+	PutOrUpdateDictionary(key string, value map[string]string) (map[string]string, bool)
 
-	SetTTL(key string, keyTTL int) (string, error)
+	RemoveElement(key string)
+
+	SetTTL(key string, keyTTL int)
 }
