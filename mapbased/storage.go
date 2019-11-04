@@ -18,6 +18,7 @@ func NewStorage() *Storage {
 	}
 }
 
+// GetKeys получение списка ключей
 func (s *Storage) GetKeys() []string {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
@@ -34,6 +35,7 @@ func (s *Storage) GetKeys() []string {
 	return result
 }
 
+// GetElement получение элемента по ключу
 func (s *Storage) GetElement(key string) (interface{}, error) {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
@@ -55,6 +57,7 @@ func (s *Storage) GetElement(key string) (interface{}, error) {
 	}
 }
 
+// GetListElement получение по индексу одного элемента из списка
 func (s *Storage) GetListElement(key string, index int) (string, error) {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
@@ -80,6 +83,7 @@ func (s *Storage) GetListElement(key string, index int) (string, error) {
 	return v[index], nil
 }
 
+// GetDictionaryElement получение по ключу одного элемента из словаря
 func (s *Storage) GetDictionaryElement(key, keyInMap string) (string, error) {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
@@ -102,8 +106,8 @@ func (s *Storage) GetDictionaryElement(key, keyInMap string) (string, error) {
 	return item, nil
 }
 
-// PutOrUpdateString добавляет либо обновляет значение ключа. Если ключь уже существовал, то перавым аргументом
-// возвращает предыдущее значение ключа, а вторым аргументом возвращает true
+// PutOrUpdateString добавление либо обновление значения ключа. Если ключь уже существовал, то перавым аргументом
+// возвращается предыдущее значение ключа, а вторым аргументом возвращается true
  func (s *Storage) PutOrUpdateString(key, value string) (previousVal string, isUpdated bool) {
 	s.mx.Lock()
 	defer s.mx.Unlock()
@@ -116,8 +120,8 @@ func (s *Storage) GetDictionaryElement(key, keyInMap string) (string, error) {
 	return previousVal, isUpdated
 }
 
-// PutOrUpdateList добавляет либо обновляет значение ключа. Если ключь уже существовал, то перавым аргументом
-// возвращает предыдущее значение ключа, а вторым аргументом возвращает true
+// PutOrUpdateList добавление либо обновление значения ключа. Если ключь уже существовал, то перавым аргументом
+// возвращается предыдущее значение ключа, а вторым аргументом возвращается true
 func (s *Storage) PutOrUpdateList(key string, value []string) (previousVal []string, isUpdated bool) {
 	s.mx.Lock()
 	defer s.mx.Unlock()
@@ -130,8 +134,8 @@ func (s *Storage) PutOrUpdateList(key string, value []string) (previousVal []str
 	return previousVal, isUpdated
 }
 
-// PutOrUpdateDictionary добавляет либо обновляет значение ключа. Если ключь уже существовал, то перавым аргументом
-// возвращает предыдущее значение ключа, а вторым аргументом возвращает true
+// PutOrUpdateDictionary добавление либо обновление значения ключа. Если ключь уже существовал, то перавым аргументом
+// возвращается предыдущее значение ключа, а вторым аргументом возвращается true
 func (s *Storage) PutOrUpdateDictionary(key string, value map[string]string) (previousVal map[string]string, isUpdated bool) {
 	s.mx.Lock()
 	defer s.mx.Unlock()
@@ -144,6 +148,7 @@ func (s *Storage) PutOrUpdateDictionary(key string, value map[string]string) (pr
 	return previousVal, isUpdated
 }
 
+// RemoveElement удаление элемента по ключу
 func (s *Storage) RemoveElement(key string) {
 	s.mx.Lock()
 	defer s.mx.Unlock()
@@ -151,6 +156,8 @@ func (s *Storage) RemoveElement(key string) {
 	return
 }
 
+// SetTTL установка TTL для ключа и удаление элемента после по прошествии времени.
+// TTL устанваливаетс в милисекундах
 func (s *Storage) SetTTL(key string, keyTTL int) {
 	if keyTTL <= 0 {
 		return
