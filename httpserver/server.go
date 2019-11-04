@@ -10,6 +10,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type SetStringBody struct {
+	Value string `json:"value" binding:"required"`
+	TTL uint64 `json:"ttl"`
+}
+
+type SetListBody struct {
+	Value []string `json:"value" binding:"required"`
+	TTL uint64 `json:"ttl"`
+}
+
+type SetDictionaryBody struct {
+	Value map[string]string `json:"value" binding:"required"`
+	TTL uint64 `json:"ttl"`
+}
+
 type Server struct {
 	port     string
 	accounts gin.Accounts
@@ -35,6 +50,12 @@ func (s *Server) Run() {
 	authorized.GET("/keys", s.getKeys)
 	authorized.GET("/key/:key", s.getElement)
 	authorized.GET("/key/:key/:internalKey", s.getInternalElement)
+
+	authorized.PUT("/set/string/:key", s.setSting)
+	authorized.PUT("/set/list/:key", s.setList)
+	authorized.PUT("/set/dictionary/:key", s.setDictionary)
+
+	authorized.DELETE("/remove/:key", s.deleteKey)
 
 	log.Fatal(r.Run(":" + s.port))
 }
@@ -133,12 +154,63 @@ func (s *Server) getInternalElement(c *gin.Context) {
 	return
 }
 
+// setSting добавление или обновление ключа строки в кеше
+// curl -H 'content-type: application/json' -k -u user:pass -d '{ "value": "manu", "ttl": 5000 }' -X PUT http://localhost:8081/cache/set/string/<key>
 func (s *Server) setSting(c *gin.Context) {
-
+	key := c.Param("key")
+	var value SetStringBody
+	if err := c.ShouldBindJSON(&value); err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": err.Error()},
+		)
+		return
+	}
+	s.storage.PutOrUpdateString(key, value.Value)
+	if value.TTL != 0 {
+		s.storage.SetTTL(key, value.TTL)
+	}
 }
 
+// setList добавление или обновление ключа списка в кеше
+// curl -H 'content-type: application/json' -k -u user:pass -d '{ "value": ["manu","suro","jonk"] }' -X PUT http://localhost:8081/cache/set/list/<key>
 func (s *Server) setList(c *gin.Context) {
+	key := c.Param("key")
+	var value SetListBody
+	if err := c.ShouldBindJSON(&value); err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": err.Error()},
+		)
+		return
+	}
+	s.storage.PutOrUpdateList(key, value.Value)
+	if value.TTL != 0 {
+		s.storage.SetTTL(key, value.TTL)
+	}
 }
 
+// setDictionary добавление или обновление ключа словаря в кеше
+// curl -H 'content-type: application/json' -k -u user:pass -d '{ "value": ["manu","suro","jonk"] }' -X PUT http://localhost:8081/cache/set/dictionary/<key>
 func (s *Server) setDictionary(c *gin.Context) {
+	key := c.Param("key")
+	var value SetDictionaryBody
+	if err := c.ShouldBindJSON(&value); err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": err.Error()},
+		)
+		return
+	}
+	s.storage.PutOrUpdateDictionary(key, value.Value)
+	if value.TTL != 0 {
+		s.storage.SetTTL(key, value.TTL)
+	}
+}
+
+// deleteKey удаление ключа из кеша
+// curl -k -u user:pass -X DELETE http://localhost:8081/cache/remove/<key>
+func (s *Server) deleteKey(c *gin.Context) {
+	key := c.Param("key")
+	s.storage.RemoveElement(key)
 }

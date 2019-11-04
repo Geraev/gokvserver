@@ -23,6 +23,6 @@ type Storage interface {
 
 	RemoveElement(key string)
 
-	SetTTL(key string, keyTTL int)
+	SetTTL(key string, keyTTL uint64)
 	GetType(key string) (ValueType, error)
 }

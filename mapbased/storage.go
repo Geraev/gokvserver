@@ -60,7 +60,7 @@ func (s *Storage) GetElement(key string) (interface{}, error) {
 	if !ok {
 		// Не являеться ошибкой (но это не точно)
 		// Возвращаеться пустая строка в качестве дефолтного значения
-		return "", nil
+		return "", errors.New("key not found")
 	}
 
 	switch v := val.(type) {
@@ -176,7 +176,7 @@ func (s *Storage) RemoveElement(key string) {
 
 // SetTTL установка TTL для ключа и удаление элемента после по прошествии времени.
 // TTL устанваливаетс в милисекундах
-func (s *Storage) SetTTL(key string, keyTTL int) {
+func (s *Storage) SetTTL(key string, keyTTL uint64) {
 	if keyTTL <= 0 {
 		return
 	}
