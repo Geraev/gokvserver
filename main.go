@@ -6,18 +6,20 @@ import (
 )
 
 func main() {
-	ttt := mapbased.NewStorage()
-	_ = ttt
-
 
 	accounts := map[string]string{
 		"iqoption": "qwerty64",
 		"geraev":   "markus14",
 	}
 
-	http := httpserver.NewServer("8081", accounts)
+	ttt := mapbased.TestTestStorage()
+	cache := mapbased.NewStorage()
+	_ = cache
+
+	http := httpserver.NewServer("8081", accounts, ttt)
 	http.Run()
 
 }
 
-
+//TODO Заменить типы string, []string, map[string]string  на собственные алиасы этих типов
+//TODO Вынести error-ы сервиса в errors.go

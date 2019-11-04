@@ -1,10 +1,21 @@
 package structs
+type ValueType int
+
+const (
+	String ValueType = iota
+	List
+	Dictionary
+)
+
+func (t ValueType) String() string {
+	return [...]string{"String", "List", "Dictionary"}[t]
+}
 
 type Storage interface {
 	GetKeys() []string
 	GetElement(key string) (interface{}, error)
 	GetListElement(key string, index int) (string, error)
-	GetDictionaryElement(key, keyInMap string) (string, error)
+	GetDictionaryElement(key, internalKey string) (string, error)
 
 	PutOrUpdateString(key, value string) (string, bool)
 	PutOrUpdateList(key string, value []string) ([]string, bool)
@@ -13,4 +24,5 @@ type Storage interface {
 	RemoveElement(key string)
 
 	SetTTL(key string, keyTTL int)
+	GetType(key string) (ValueType, error)
 }

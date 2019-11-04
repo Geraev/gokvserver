@@ -2,6 +2,7 @@ package mapbased
 
 import (
 	"errors"
+	"github.com/geraev/gokvserver/structs"
 	"sync"
 	"time"
 )
@@ -15,6 +16,21 @@ func NewStorage() *Storage {
 	return &Storage{
 		mx:   new(sync.RWMutex),
 		data: make(map[string]interface{}),
+	}
+}
+
+func TestTestStorage() *Storage {
+	return &Storage{
+		mx:   new(sync.RWMutex),
+		data: map[string]interface{}{
+			"keyForStr1": "ValueString_1",
+			"keyForStr2": "ValueString_2",
+			"keyForList": []string{"new_string_1", "new_string_2"},
+			"keyForDict": map[string]string{
+				"key_one": "value_one",
+				"key_two": "value_two",
+			},
+		},
 	}
 }
 
@@ -42,7 +58,9 @@ func (s *Storage) GetElement(key string) (interface{}, error) {
 
 	val, ok := s.data[key]
 	if !ok {
-		return "", errors.New("key not found")
+		// Не являеться ошибкой (но это не точно)
+		// Возвращаеться пустая строка в качестве дефолтного значения
+		return "", nil
 	}
 
 	switch v := val.(type) {
@@ -84,7 +102,7 @@ func (s *Storage) GetListElement(key string, index int) (string, error) {
 }
 
 // GetDictionaryElement получение по ключу одного элемента из словаря
-func (s *Storage) GetDictionaryElement(key, keyInMap string) (string, error) {
+func (s *Storage) GetDictionaryElement(key, internalKey string) (string, error) {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
 
@@ -98,7 +116,7 @@ func (s *Storage) GetDictionaryElement(key, keyInMap string) (string, error) {
 		return "", errors.New("something wrong: type error")
 	}
 
-	item, ok := v[keyInMap]
+	item, ok := v[internalKey]
 	if !ok {
 		return "",errors.New("key not found")
 	}
@@ -168,4 +186,25 @@ func (s *Storage) SetTTL(key string, keyTTL int) {
 		s.mx.Unlock()
 	})
 	return
+}
+
+func (s *Storage) GetType(key string) (structs.ValueType, error) {
+	s.mx.RLock()
+	defer s.mx.RUnlock()
+
+	val, ok := s.data[key]
+	if !ok {
+		return 0, errors.New("key not found")
+	}
+
+	switch val.(type) {
+	case string:
+		return structs.String, nil
+	case []string:
+		return structs.List, nil
+	case map[string]string:
+		return structs.Dictionary, nil
+	default:
+		return 0, errors.New("something wrong: type error")
+	}
 }
