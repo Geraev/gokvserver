@@ -1,0 +1,177 @@
+swagger: "2.0"
+info:
+  description: "Сервис предоставляет кэш в оперативной памяти по подобию Redis. Имплементация написанна на языке Go"
+  version: "0.1.0"
+  title: "Cache Service Redis-like"
+  contact:
+    email: "gheraev.rajiv@gmail.com"
+host: "localhost:8081"
+basePath: "/cache"
+schemes:
+  - "http"
+paths:
+  /keys:
+    get:
+      summary: "Получить список ключей в кеше"
+      description: ""
+      responses:
+        200:
+          description: OK
+      security:
+        - basicAuth: []
+  /key/{key}:
+    get:
+      summary: "Получить значение элемента"
+      description: ""
+      parameters:
+        - name: "key"
+          in: "path"
+          description: "Ключ"
+          required: true
+          type: "string"
+      responses:
+        200:
+          description: OK
+      security:
+        - basicAuth: []
+  /key/{key}/{internalKey}:
+    get:
+      summary: "Получить значение внутреннего элемента по ключу либо индексу"
+      description: ""
+      parameters:
+        - name: "key"
+          in: "path"
+          description: "Ключ"
+          required: true
+          type: "string"
+        - name: "internalKey"
+          in: "path"
+          description: "Внутренний ключ словаря либо индекс списка"
+          required: true
+          type: "string"
+      responses:
+        200:
+          description: OK
+      security:
+        - basicAuth: []
+  /remove/{key}:
+    delete:
+      summary: "Удалить элемент в кеше"
+      description: ""
+      parameters:
+        - name: "key"
+          in: "path"
+          description: "Ключ удаляемого элемента"
+          required: true
+          type: "string"
+      responses:
+        400:
+          description: "Invalid ID supplied"
+        200:
+          description: OK
+      security:
+        - basicAuth: []
+  /set/string/{key}:
+    put:
+      summary: "Добавить или обновить элемент"
+      description: ""
+      parameters:
+        - name: "key"
+          in: "path"
+          description: "Ключ элемента"
+          required: true
+          type: "string"
+        - in: "body"
+          name: "body"
+          description: "Updated user object"
+          required: true
+          schema:
+            $ref: "#/definitions/StringBody"
+      responses:
+        200:
+          description: OK
+      security:
+        - basicAuth: []
+  /set/list/{key}:
+    put:
+      summary: "Добавить или обновить элемент"
+      description: ""
+      parameters:
+        - name: "key"
+          in: "path"
+          description: "Ключ элемента"
+          required: true
+          type: "string"
+        - in: "body"
+          name: "body"
+          description: "Updated user object"
+          required: true
+          schema:
+            $ref: "#/definitions/ListBody"
+      responses:
+        200:
+          description: OK
+      security:
+        - basicAuth: []
+  /set/dictionary/{key}:
+    put:
+      summary: "Добавить или обновить элемент"
+      description: ""
+      parameters:
+        - name: "key"
+          in: "path"
+          description: "Ключ элемента"
+          required: true
+          type: "string"
+        - in: "body"
+          name: "body"
+          description: "Updated user object"
+          required: true
+          schema:
+            $ref: "#/definitions/DictionaryBody"
+      responses:
+        200:
+          description: OK
+      security:
+        - basicAuth: []
+
+securityDefinitions:
+  basicAuth:
+    type: basic
+
+definitions:
+  StringBody:
+    type: "object"
+    properties:
+      value:
+        type: "string"
+        description: "Значение элемента"
+      ttl:
+        type: "integer"
+        format: "int64"
+  ListBody:
+    type: "object"
+    properties:
+      value:
+        type: "array"
+        items:
+          type: "string"
+        description: "Значение элемента"
+      ttl:
+        type: "integer"
+        format: "int64"
+  DictionaryBody:
+    type: "object"
+    properties:
+      value:
+        type: object
+        additionalProperties:
+          type: string
+        description: "Значение элемента"
+      ttl:
+        type: "integer"
+        format: "int64"
+
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"
