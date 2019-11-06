@@ -12,17 +12,17 @@ import (
 
 type SetStringBody struct {
 	Value string `json:"value" binding:"required"`
-	TTL uint64 `json:"ttl"`
+	TTL   uint64 `json:"ttl"`
 }
 
 type SetListBody struct {
 	Value []string `json:"value" binding:"required"`
-	TTL uint64 `json:"ttl"`
+	TTL   uint64   `json:"ttl"`
 }
 
 type SetDictionaryBody struct {
 	Value map[string]string `json:"value" binding:"required"`
-	TTL uint64 `json:"ttl"`
+	TTL   uint64            `json:"ttl"`
 }
 
 type Server struct {
@@ -78,7 +78,7 @@ func (s *Server) getElement(c *gin.Context) {
 	if err != nil {
 		c.JSON(
 			http.StatusBadRequest,
-			gin.H{"error": err.Error()},  //TODO Нельзя возвращать внутренние ошибки. Исправить в следующей реализации
+			gin.H{"error": err.Error()}, //TODO Нельзя возвращать внутренние ошибки. Исправить в следующей реализации
 		)
 		return
 	}
@@ -191,7 +191,7 @@ func (s *Server) setList(c *gin.Context) {
 }
 
 // setDictionary добавление или обновление ключа словаря в кеше
-// curl -H 'content-type: application/json' -k -u user:pass -d '{ "value": ["manu","suro","jonk"] }' -X PUT http://localhost:8081/cache/set/dictionary/<key>
+// curl -H 'content-type: application/json' -k -u user:pass -d '{"value": {"k1":"manu","k2":"sol","k3":"vano"} }' -X PUT http://localhost:8081/cache/set/dictionary/<key>
 func (s *Server) setDictionary(c *gin.Context) {
 	key := c.Param("key")
 	var value SetDictionaryBody

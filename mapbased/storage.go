@@ -21,7 +21,7 @@ func NewStorage() *Storage {
 
 func TestTestStorage() *Storage {
 	return &Storage{
-		mx:   new(sync.RWMutex),
+		mx: new(sync.RWMutex),
 		data: map[string]interface{}{
 			"keyForStr1": "ValueString_1",
 			"keyForStr2": "ValueString_2",
@@ -118,7 +118,7 @@ func (s *Storage) GetDictionaryElement(key, internalKey string) (string, error) 
 
 	item, ok := v[internalKey]
 	if !ok {
-		return "",errors.New("key not found")
+		return "", errors.New("key not found")
 	}
 
 	return item, nil
@@ -126,7 +126,7 @@ func (s *Storage) GetDictionaryElement(key, internalKey string) (string, error) 
 
 // PutOrUpdateString добавление либо обновление значения ключа. Если ключь уже существовал, то перавым аргументом
 // возвращается предыдущее значение ключа, а вторым аргументом возвращается true
- func (s *Storage) PutOrUpdateString(key, value string) (previousVal string, isUpdated bool) {
+func (s *Storage) PutOrUpdateString(key, value string) (previousVal string, isUpdated bool) {
 	s.mx.Lock()
 	defer s.mx.Unlock()
 

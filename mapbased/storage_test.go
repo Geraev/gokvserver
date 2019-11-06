@@ -8,7 +8,7 @@ import (
 
 var (
 	storg = Storage{
-		mx:   &sync.RWMutex{},
+		mx: &sync.RWMutex{},
 		data: map[string]interface{}{
 			"keyForStr1": "ValueString_1",
 			"keyForStr2": "ValueString_2",
@@ -106,10 +106,10 @@ func TestStorage_GetElement(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "Testing GetElement: value type map",
-			fields:  storg,
-			args:    args{key: "keyForDict"},
-			want:    map[string]string{
+			name:   "Testing GetElement: value type map",
+			fields: storg,
+			args:   args{key: "keyForDict"},
+			want: map[string]string{
 				"key_one": "value_one",
 				"key_two": "value_two",
 			},

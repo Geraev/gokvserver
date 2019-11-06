@@ -1,4 +1,5 @@
 package structs
+
 type ValueType int
 
 const (
