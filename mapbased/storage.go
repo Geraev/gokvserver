@@ -3,6 +3,7 @@ package mapbased
 import (
 	"errors"
 	"github.com/geraev/gokvserver/structs"
+	"sort"
 	"sync"
 	"time"
 )
@@ -47,7 +48,7 @@ func (s *Storage) GetKeys() []string {
 	for key := range s.data {
 		result = append(result, key)
 	}
-
+	sort.Strings(result)
 	return result
 }
 
@@ -149,6 +150,7 @@ func (s *Storage) PutOrUpdateList(key string, value []string) (previousVal []str
 		isUpdated = ok
 	}
 	s.data[key] = value
+	sort.Strings(previousVal)
 	return previousVal, isUpdated
 }
 
