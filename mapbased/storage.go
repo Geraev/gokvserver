@@ -2,6 +2,7 @@ package mapbased
 
 import (
 	"errors"
+	"fmt"
 	"github.com/geraev/gokvserver/structs"
 	"sort"
 	"sync"
@@ -185,6 +186,7 @@ func (s *Storage) SetTTL(key string, keyTTL uint64) {
 	time.AfterFunc(time.Millisecond*time.Duration(keyTTL), func() {
 		s.mx.Lock()
 		delete(s.data, key)
+		fmt.Println("Key was deleted", key)
 		s.mx.Unlock()
 	})
 	return

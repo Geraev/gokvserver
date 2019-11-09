@@ -15,6 +15,10 @@ type SetStringBody struct {
 	TTL   uint64 `json:"ttl"`
 }
 
+type SetTTLBody struct {
+	Value uint64 `json:"value" binding:"required"`
+}
+
 type SetListBody struct {
 	Value []string `json:"value" binding:"required"`
 	TTL   uint64   `json:"ttl"`
@@ -50,6 +54,8 @@ func (s *Server) Run() {
 	authorized.GET("/keys", s.getKeys)
 	authorized.GET("/key/:key", s.getElement)
 	authorized.GET("/key/:key/:internalKey", s.getInternalElement)
+
+	authorized.POST("/set/ttl/:key", s.setTTL)
 
 	authorized.PUT("/set/string/:key", s.setSting)
 	authorized.PUT("/set/list/:key", s.setList)
@@ -151,6 +157,22 @@ func (s *Server) getInternalElement(c *gin.Context) {
 		http.StatusOK,
 		gin.H{"value": val},
 	)
+	return
+}
+
+// setTTL установка времени жизни ключа
+// curl -H 'content-type: application/json' -k -u user:pass -d '{ "value": 3000 }' -X PUT http://localhost:8081/cache/set/ttl/<key>
+func (s *Server) setTTL(c *gin.Context) {
+	key := c.Param("key")
+	var value SetTTLBody
+	if err := c.ShouldBindJSON(&value); err != nil {
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": err.Error()},
+		)
+		return
+	}
+	s.storage.SetTTL(key, value.Value)
 	return
 }
 

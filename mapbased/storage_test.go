@@ -3,10 +3,12 @@ package mapbased
 import (
 	"errors"
 	"github.com/geraev/gokvserver/structs"
+	"math"
 	"reflect"
 	"sort"
 	"sync"
 	"testing"
+	"time"
 )
 
 var (
@@ -41,9 +43,9 @@ func TestStorage_GetKeys(t *testing.T) {
 			},
 		},
 		{
-			name:   "Testing GetElement: return empty list",
+			name: "Testing GetElement: return empty list",
 			fields: Storage{
-				mx: &sync.RWMutex{},
+				mx:   &sync.RWMutex{},
 				data: map[string]interface{}{},
 			},
 			want: []string{},
@@ -106,7 +108,7 @@ func TestStorage_GetElement(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:   "Testing GetElement: failed type",
+			name: "Testing GetElement: failed type",
 			fields: Storage{
 				mx: &sync.RWMutex{},
 				data: map[string]interface{}{
@@ -117,8 +119,8 @@ func TestStorage_GetElement(t *testing.T) {
 					}{},
 				},
 			},
-			args:   args{key: "key_01"},
-			want: "",
+			args:    args{key: "key_01"},
+			want:    "",
 			wantErr: true,
 		},
 	}
@@ -410,35 +412,35 @@ func TestStorage_GetType(t *testing.T) {
 		wantErr error
 	}{
 		{
-			name: "Testing GetType: return Dictionary",
-			fields: storg,
-			args: args{key: "keyForDict"},
-			want: structs.Dictionary,
+			name:    "Testing GetType: return Dictionary",
+			fields:  storg,
+			args:    args{key: "keyForDict"},
+			want:    structs.Dictionary,
 			wantErr: (error)(nil),
 		},
 		{
-			name: "Testing GetType: return List",
-			fields: storg,
-			args: args{key: "keyForList"},
-			want: structs.List,
+			name:    "Testing GetType: return List",
+			fields:  storg,
+			args:    args{key: "keyForList"},
+			want:    structs.List,
 			wantErr: (error)(nil),
 		},
 		{
-			name: "Testing GetType: return String",
-			fields: storg,
-			args: args{key: "keyForStr2"},
-			want: structs.String,
+			name:    "Testing GetType: return String",
+			fields:  storg,
+			args:    args{key: "keyForStr2"},
+			want:    structs.String,
 			wantErr: (error)(nil),
 		},
 		{
-			name: "Testing GetType: key not found",
-			fields: storg,
-			args: args{key: "keyFailed"},
-			want: 0,
+			name:    "Testing GetType: key not found",
+			fields:  storg,
+			args:    args{key: "keyFailed"},
+			want:    0,
 			wantErr: errors.New("key not found"),
 		},
 		{
-			name:   "Testing GetType: failed type",
+			name: "Testing GetType: failed type",
 			fields: Storage{
 				mx: &sync.RWMutex{},
 				data: map[string]interface{}{
@@ -449,8 +451,8 @@ func TestStorage_GetType(t *testing.T) {
 					}{},
 				},
 			},
-			args:   args{key: "key_01"},
-			want: 0,
+			args:    args{key: "key_01"},
+			want:    0,
 			wantErr: errors.New("something wrong: type error"),
 		},
 	}
@@ -494,7 +496,6 @@ func TestStorage_RemoveElement(t *testing.T) {
 				data: tt.fields.data,
 			}
 			s.RemoveElement(tt.args.key)
-
 			_, err := s.GetElement(tt.args.key)
 			if err == nil {
 				t.Errorf("GetElement() got = %v, want %v", nil, err)
@@ -504,29 +505,24 @@ func TestStorage_RemoveElement(t *testing.T) {
 }
 
 
-
-
-
-
-
-
-
-
-/*func TestStorage_SetTTL(t *testing.T) {
-	type fields struct {
-		mx   *sync.RWMutex
-		data map[string]interface{}
-	}
+func TestStorage_SetTTL(t *testing.T) {
 	type args struct {
 		key    string
 		keyTTL uint64
 	}
 	tests := []struct {
 		name   string
-		fields fields
+		fields Storage
 		args   args
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "Testing SetTTL",
+			fields: storg,
+			args: args{
+				key:    "setTTLKey",
+				keyTTL: uint64(time.Millisecond * 70),
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -534,32 +530,17 @@ func TestStorage_RemoveElement(t *testing.T) {
 				mx:   tt.fields.mx,
 				data: tt.fields.data,
 			}
+			_, gotIsUpdated := s.PutOrUpdateString(tt.args.key, "gocache")
+			if gotIsUpdated != false {
+				t.Errorf("PutOrUpdateString() gotIsUpdated = %v, want %v", gotIsUpdated, false)
+			}
+			s.SetTTL(tt.args.key, tt.args.keyTTL)
+			time.Sleep(time.Duration(math.Round(float64(tt.args.keyTTL) * 1.2)))
+			_, err := s.GetElement(tt.args.key)
+			if err == nil {
+				t.Errorf("GetElement() error = %+v, wantErr %v", err, nil)
+				return
+			}
 		})
 	}
 }
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
