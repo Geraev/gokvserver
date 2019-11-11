@@ -11,7 +11,7 @@ import (
 
 var (
 	flags struct {
-		tcpAddr string
+		tcpAddr  string
 		httpAddr string
 	}
 
@@ -33,14 +33,14 @@ func main() {
 	tcpRun()
 }
 
-func httpRun()  {
+func httpRun() {
 	http := httpserver.NewServer(flags.httpAddr, accounts, cache)
 	if err := http.Run(); err != nil {
 		log.Fatalln(err)
 	}
 }
 
-func httpDevRun()  {
+func httpDevRun() {
 	ttt := mapbased.TestTestStorage()
 	http := httpserver.NewServer(flags.httpAddr, accounts, ttt)
 	if err := http.Run(); err != nil {
@@ -48,7 +48,7 @@ func httpDevRun()  {
 	}
 }
 
-func tcpRun()  {
+func tcpRun() {
 	tcp := tcpserver.NewServer(flags.tcpAddr, cache)
 	if err := tcp.Run(); err != nil {
 		log.Fatalln(err)

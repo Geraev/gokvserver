@@ -484,9 +484,9 @@ func TestStorage_RemoveElement(t *testing.T) {
 		args   args
 	}{
 		{
-			name: "Testing RemoveElement",
+			name:   "Testing RemoveElement",
 			fields: storg,
-			args: args{key: "keyForDict"},
+			args:   args{key: "keyForDict"},
 		},
 	}
 	for _, tt := range tests {
@@ -503,7 +503,6 @@ func TestStorage_RemoveElement(t *testing.T) {
 		})
 	}
 }
-
 
 func TestStorage_SetTTL(t *testing.T) {
 	type args struct {

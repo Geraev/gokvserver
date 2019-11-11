@@ -110,7 +110,9 @@ func (s *Server) getElement(w resp.ResponseWriter, c *resp.Command) {
 	}
 
 	switch val.(type) {
-	case string, []string, map[string]string:
+	case string:
+		value = []byte(fmt.Sprintf("%v", val))
+	case []string, map[string]string:
 		value, err = json.Marshal(val)
 		if err != nil {
 			w.AppendError(err.Error())
@@ -183,7 +185,7 @@ func (s *Server) expire(w resp.ResponseWriter, c *resp.Command) {
 		return
 	}
 
-	s.storage.SetTTL(key, uint64(val))
+	s.storage.SetExpired(key, uint64(val))
 
 	w.AppendOK()
 }

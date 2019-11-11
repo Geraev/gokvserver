@@ -2,7 +2,6 @@ package mapbased
 
 import (
 	"errors"
-	"fmt"
 	"github.com/geraev/gokvserver/structs"
 	"sort"
 	"sync"
@@ -10,15 +9,24 @@ import (
 )
 
 type Storage struct {
-	mx   *sync.RWMutex
-	data map[string]interface{}
+	mx      *sync.RWMutex
+	data    map[string]interface{}
+	expired map[string]uint64
+	janitor *janitor
 }
 
 func NewStorage() *Storage {
-	return &Storage{
-		mx:   new(sync.RWMutex),
-		data: make(map[string]interface{}),
+	s := &Storage{
+		mx:      new(sync.RWMutex),
+		data:    make(map[string]interface{}),
+		expired: make(map[string]uint64),
 	}
+	//S := &struct {
+	//	*Storage
+	//}{s}
+	runJanitor(s, time.Millisecond*20)
+	//runtime.SetFinalizer(S, stopJanitor)
+	return s
 }
 
 func TestTestStorage() *Storage {
@@ -60,8 +68,6 @@ func (s *Storage) GetElement(key string) (interface{}, error) {
 
 	val, ok := s.data[key]
 	if !ok {
-		// Не являеться ошибкой (но это не точно)
-		// Возвращаеться пустая строка в качестве дефолтного значения
 		return "", errors.New("key not found")
 	}
 
@@ -179,6 +185,7 @@ func (s *Storage) RemoveElement(key string) {
 
 // SetTTL установка TTL для ключа и удаление элемента после по прошествии времени.
 // TTL устанваливаетс в милисекундах
+// Deprecated
 func (s *Storage) SetTTL(key string, keyTTL uint64) {
 	if keyTTL <= 0 {
 		return
@@ -186,10 +193,34 @@ func (s *Storage) SetTTL(key string, keyTTL uint64) {
 	time.AfterFunc(time.Millisecond*time.Duration(keyTTL), func() {
 		s.mx.Lock()
 		delete(s.data, key)
-		fmt.Println("Key was deleted", key)
 		s.mx.Unlock()
 	})
 	return
+}
+
+// SetExpired установка TTL для ключа
+func (s *Storage) SetExpired(key string, expired uint64) {
+	if expired == 0 {
+		return
+	}
+	s.mx.Lock()
+	defer s.mx.Unlock()
+	e := time.Now().Add(time.Millisecond * time.Duration(expired)).UnixNano()
+	s.expired[key] = uint64(e)
+}
+
+// DeleteExpired удаление просроченых кдючей
+func (s *Storage) DeleteExpired() {
+	s.mx.RLock()
+	defer s.mx.RUnlock()
+
+	now := time.Now().UnixNano()
+	for key, expired := range s.expired {
+		if uint64(now) >= expired {
+			delete(s.data, key)
+			delete(s.expired, key)
+		}
+	}
 }
 
 func (s *Storage) GetType(key string) (structs.ValueType, error) {

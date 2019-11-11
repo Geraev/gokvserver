@@ -24,6 +24,7 @@ type Storage interface {
 
 	RemoveElement(key string)
 
-	SetTTL(key string, keyTTL uint64)
+	SetTTL(key string, keyTTL uint64) // Deprecated
+	SetExpired(key string, expired uint64)
 	GetType(key string) (ValueType, error)
 }
