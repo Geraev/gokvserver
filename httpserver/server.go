@@ -3,7 +3,6 @@ package httpserver
 import (
 	"errors"
 	"github.com/geraev/gokvserver/structs"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -44,7 +43,7 @@ func NewServer(port string, accounts map[string]string, storage structs.Storage)
 	}
 }
 
-func (s *Server) Run() {
+func (s *Server) Run() error {
 
 	r := gin.Default()
 
@@ -57,13 +56,13 @@ func (s *Server) Run() {
 
 	authorized.POST("/set/ttl/:key", s.setTTL)
 
-	authorized.PUT("/set/string/:key", s.setSting)
+	authorized.PUT("/set/string/:key", s.setString)
 	authorized.PUT("/set/list/:key", s.setList)
 	authorized.PUT("/set/dictionary/:key", s.setDictionary)
 
 	authorized.DELETE("/remove/:key", s.deleteKey)
 
-	log.Fatal(r.Run(":" + s.port))
+	return r.Run(":" + s.port)
 }
 
 // getKeys получение списка ключей из кеша
@@ -178,7 +177,7 @@ func (s *Server) setTTL(c *gin.Context) {
 
 // setSting добавление или обновление ключа строки в кеше
 // curl -H 'content-type: application/json' -k -u user:pass -d '{ "value": "manu", "ttl": 5000 }' -X PUT http://localhost:8081/cache/set/string/<key>
-func (s *Server) setSting(c *gin.Context) {
+func (s *Server) setString(c *gin.Context) {
 	key := c.Param("key")
 	var value SetStringBody
 	if err := c.ShouldBindJSON(&value); err != nil {
