@@ -8,6 +8,7 @@ import (
 	"github.com/geraev/gokvserver/structs"
 	"log"
 	"net"
+	"strconv"
 	"strings"
 )
 
@@ -63,6 +64,7 @@ func (s *Server) Run() error {
 	srv.HandleFunc("set", s.set)
 	srv.HandleFunc("keys", s.getKeys)
 	srv.HandleFunc("key", s.getElement)
+	srv.HandleFunc("ikey", s.getInternalElement)
 
 	lis, err := net.Listen("tcp", ":"+s.port)
 	if err != nil {
@@ -119,61 +121,48 @@ func (s *Server) getElement(w resp.ResponseWriter, c *resp.Command) {
 }
 
 // getInternalElement получение внутреннего элемента из списка (по индексу) или словаря (по ключу)
-// curl -k -u user:pass http://localhost:8081/cache/key/<key>/<internal key or index>
 func (s *Server) getInternalElement(w resp.ResponseWriter, c *resp.Command) {
-	/*	key := c.Param("key")
-		internalKey := c.Param("internalKey")
-
-		vartype, err := s.storage.GetType(key)
-		if err != nil {
-			c.JSON(
-				http.StatusBadRequest,
-				gin.H{"error": err.Error()},
-			)
-			return
-		}
-		var val string
-		switch vartype {
-		case structs.List:
-			index, err := strconv.ParseUint(internalKey, 10, 0)
-			if err != nil {
-				c.JSON(
-					http.StatusBadRequest,
-					gin.H{"error": err.Error()},
-				)
-				return
-			}
-			val, err = s.storage.GetListElement(key, int(index))
-			if err != nil {
-				c.JSON(
-					http.StatusBadRequest,
-					gin.H{"error": err.Error()},
-				)
-				return
-			}
-		case structs.Dictionary:
-			val, err = s.storage.GetDictionaryElement(key, internalKey)
-			if err != nil {
-				c.JSON(
-					http.StatusBadRequest,
-					gin.H{"error": err.Error()},
-				)
-				return
-			}
-		default:
-			c.JSON(
-				http.StatusBadRequest,
-				gin.H{"error": errors.New("something wrong: type error").Error()},
-			)
-			return
-		}
-
-		c.JSON(
-			http.StatusOK,
-			gin.H{"value": val},
-		)
+	if c.ArgN() != 2 {
+		w.AppendError(redeo.WrongNumberOfArgs(c.Name))
+		w.AppendError(errSetMsg)
 		return
-	*/
+	}
+	var (
+		val         string
+		key         = c.Arg(0).String()
+		internalKey = c.Arg(1).String()
+	)
+
+	vartype, err := s.storage.GetType(key)
+	if err != nil {
+		w.AppendError(err.Error())
+		return
+	}
+
+	switch vartype {
+	case structs.List:
+		index, err := strconv.ParseUint(internalKey, 10, 0)
+		if err != nil {
+			w.AppendError(err.Error())
+			return
+		}
+		val, err = s.storage.GetListElement(key, int(index))
+		if err != nil {
+			w.AppendError(err.Error())
+			return
+		}
+	case structs.Dictionary:
+		val, err = s.storage.GetDictionaryElement(key, internalKey)
+		if err != nil {
+			w.AppendError(err.Error())
+			return
+		}
+	default:
+		w.AppendError("something wrong: type error")
+		return
+	}
+
+	w.AppendInlineString(val)
 }
 
 // setTTL установка времени жизни ключа
