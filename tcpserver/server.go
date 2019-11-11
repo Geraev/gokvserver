@@ -66,6 +66,9 @@ func (s *Server) Run() error {
 	srv.HandleFunc("key", s.getElement)
 	srv.HandleFunc("ikey", s.getInternalElement)
 
+	srv.HandleFunc("expire", s.expire)
+	srv.HandleFunc("remove", s.deleteKey)
+
 	lis, err := net.Listen("tcp", ":"+s.port)
 	if err != nil {
 		return err
@@ -165,21 +168,24 @@ func (s *Server) getInternalElement(w resp.ResponseWriter, c *resp.Command) {
 	w.AppendInlineString(val)
 }
 
-// setTTL установка времени жизни ключа
-// curl -H 'content-type: application/json' -k -u user:pass -d '{ "value": 3000 }' -X PUT http://localhost:8081/cache/set/ttl/<key>
-func (s *Server) setTTL(w resp.ResponseWriter, c *resp.Command) {
-	/*	key := c.Param("key")
-		var value SetTTLBody
-		if err := c.ShouldBindJSON(&value); err != nil {
-			c.JSON(
-				http.StatusBadRequest,
-				gin.H{"error": err.Error()},
-			)
-			return
-		}
-		s.storage.SetTTL(key, value.Value)
+// expire установка времени жизни ключа
+func (s *Server) expire(w resp.ResponseWriter, c *resp.Command) {
+	if c.ArgN() != 2 {
+		w.AppendError(redeo.WrongNumberOfArgs(c.Name))
 		return
-	*/
+	}
+	var (
+		key = c.Arg(0).String()
+	)
+	val, err := c.Arg(1).Int()
+	if err != nil {
+		w.AppendError(err.Error())
+		return
+	}
+
+	s.storage.SetTTL(key, uint64(val))
+
+	w.AppendOK()
 }
 
 // set добавление или обновление ключа в кеше
@@ -233,58 +239,16 @@ func (s *Server) set(w resp.ResponseWriter, c *resp.Command) {
 	}
 }
 
-/*func (s *Server) setSting(w resp.ResponseWriter, c *resp.Command) {
-	key := c.Param("key")
-	var value SetStringBody
-	if err := c.ShouldBindJSON(&value); err != nil {
-		c.JSON(
-			http.StatusBadRequest,
-			gin.H{"error": err.Error()},
-		)
+// deleteKey удаление ключа из кеша
+func (s *Server) deleteKey(w resp.ResponseWriter, c *resp.Command) {
+	if c.ArgN() != 1 {
+		w.AppendError(redeo.WrongNumberOfArgs(c.Name))
 		return
 	}
-	s.storage.PutOrUpdateString(key, value.Value)
-	if value.TTL != 0 {
-		s.storage.SetTTL(key, value.TTL)
-	}
-}
-*/
-// setList добавление или обновление ключа списка в кеше
-// curl -H 'content-type: application/json' -k -u user:pass -d '{ "value": ["manu","suro","jonk"] }' -X PUT http://localhost:8081/cache/set/list/<key>
-func (s *Server) setList(w resp.ResponseWriter, c *resp.Command) {
-	/*	key := c.Param("key")
-		var value SetListBody
-		if err := c.ShouldBindJSON(&value); err != nil {
-			c.JSON(
-				http.StatusBadRequest,
-				gin.H{"error": err.Error()},
-			)
-			return
-		}
-		s.storage.PutOrUpdateList(key, value.Value)
-	*/
-}
 
-// setDictionary добавление или обновление ключа словаря в кеше
-// curl -H 'content-type: application/json' -k -u user:pass -d '{"value": {"k1":"manu","k2":"sol","k3":"vano"} }' -X PUT http://localhost:8081/cache/set/dictionary/<key>
-func (s *Server) setDictionary(w resp.ResponseWriter, c *resp.Command) {
-	/*	key := c.Param("key")
-		var value SetDictionaryBody
-		if err := c.ShouldBindJSON(&value); err != nil {
-			c.JSON(
-				http.StatusBadRequest,
-				gin.H{"error": err.Error()},
-			)
-			return
-		}
-		s.storage.PutOrUpdateDictionary(key, value.Value)
-	*/
-}
+	var (
+		key = c.Arg(0).String()
+	)
 
-// deleteKey удаление ключа из кеша
-// curl -k -u user:pass -X DELETE http://localhost:8081/cache/remove/<key>
-func (s *Server) deleteKey(w resp.ResponseWriter, c *resp.Command) {
-	/*	key := c.Param("key")
-		s.storage.RemoveElement(key)
-	*/
+	s.storage.RemoveElement(key)
 }

@@ -11,7 +11,6 @@ import (
 
 type SetStringBody struct {
 	Value string `json:"value" binding:"required"`
-	TTL   uint64 `json:"ttl"`
 }
 
 type SetTTLBody struct {
@@ -20,12 +19,10 @@ type SetTTLBody struct {
 
 type SetListBody struct {
 	Value []string `json:"value" binding:"required"`
-	TTL   uint64   `json:"ttl"`
 }
 
 type SetDictionaryBody struct {
 	Value map[string]string `json:"value" binding:"required"`
-	TTL   uint64            `json:"ttl"`
 }
 
 type Server struct {
@@ -176,7 +173,7 @@ func (s *Server) setTTL(c *gin.Context) {
 }
 
 // setSting добавление или обновление ключа строки в кеше
-// curl -H 'content-type: application/json' -k -u user:pass -d '{ "value": "manu", "ttl": 5000 }' -X PUT http://localhost:8081/cache/set/string/<key>
+// curl -H 'content-type: application/json' -k -u user:pass -d '{ "value": "manu" }' -X PUT http://localhost:8081/cache/set/string/<key>
 func (s *Server) setString(c *gin.Context) {
 	key := c.Param("key")
 	var value SetStringBody
@@ -188,9 +185,6 @@ func (s *Server) setString(c *gin.Context) {
 		return
 	}
 	s.storage.PutOrUpdateString(key, value.Value)
-	if value.TTL != 0 {
-		s.storage.SetTTL(key, value.TTL)
-	}
 }
 
 // setList добавление или обновление ключа списка в кеше
@@ -206,9 +200,6 @@ func (s *Server) setList(c *gin.Context) {
 		return
 	}
 	s.storage.PutOrUpdateList(key, value.Value)
-	if value.TTL != 0 {
-		s.storage.SetTTL(key, value.TTL)
-	}
 }
 
 // setDictionary добавление или обновление ключа словаря в кеше
@@ -224,9 +215,6 @@ func (s *Server) setDictionary(c *gin.Context) {
 		return
 	}
 	s.storage.PutOrUpdateDictionary(key, value.Value)
-	if value.TTL != 0 {
-		s.storage.SetTTL(key, value.TTL)
-	}
 }
 
 // deleteKey удаление ключа из кеша
