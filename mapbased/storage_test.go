@@ -463,7 +463,7 @@ func TestStorage_GetType(t *testing.T) {
 				data: tt.fields.data,
 			}
 			got, err := s.GetType(tt.args.key)
-			if err != tt.wantErr {
+			if  !reflect.DeepEqual(err, tt.wantErr) {
 				t.Errorf("GetType() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
@@ -519,7 +519,7 @@ func TestStorage_SetTTL(t *testing.T) {
 			fields: storg,
 			args: args{
 				key:    "setTTLKey",
-				keyTTL: uint64(time.Millisecond * 70),
+				keyTTL: 20,
 			},
 		},
 	}
@@ -534,9 +534,9 @@ func TestStorage_SetTTL(t *testing.T) {
 				t.Errorf("PutOrUpdateString() gotIsUpdated = %v, want %v", gotIsUpdated, false)
 			}
 			s.SetTTL(tt.args.key, tt.args.keyTTL)
-			time.Sleep(time.Duration(math.Round(float64(tt.args.keyTTL) * 1.2)))
+			time.Sleep(time.Duration(math.Round(float64(tt.args.keyTTL) * 1.2)) * time.Millisecond)
 			_, err := s.GetElement(tt.args.key)
-			if err == nil {
+			if reflect.DeepEqual(err, interface{}(nil)) {
 				t.Errorf("GetElement() error = %+v, wantErr %v", err, nil)
 				return
 			}
