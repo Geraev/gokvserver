@@ -8,6 +8,7 @@ import (
 	"github.com/geraev/gokvserver/structs"
 	"log"
 	"net"
+	"strings"
 )
 
 const (
@@ -16,6 +17,16 @@ Examples:
   set string new_key string_value
   set list planets '{"value": ["earth","jupiter","saturn"], "ttl": 10000}'
   set dictionary planets_map '{"value": ["earth":2220,"jupiter":3899,"saturn":23000], "ttl": 10000}'
+`
+
+	errKeysMsg = `Get all keys
+Example:
+  keys
+`
+
+	errKeyMsg = `Get value for key (and internal key)
+Example:
+  key <key>
 `
 )
 
@@ -50,6 +61,8 @@ func (s *Server) Run() error {
 	srv.Handle("info", redeo.Info(srv))
 
 	srv.HandleFunc("set", s.set)
+	srv.HandleFunc("keys", s.getKeys)
+	srv.HandleFunc("key", s.getElement)
 
 	lis, err := net.Listen("tcp", ":"+s.port)
 	if err != nil {
@@ -62,42 +75,47 @@ func (s *Server) Run() error {
 }
 
 // getKeys получение списка ключей из кеша
-// curl -k -u user:pass http://localhost:8081/cache/keys
 func (s *Server) getKeys(w resp.ResponseWriter, c *resp.Command) {
-	/*	c.JSON(
-			http.StatusOK,
-			gin.H{"keys": s.storage.GetKeys()},
-		)
-	*/
+	if c.ArgN() != 0 {
+		w.AppendError(redeo.WrongNumberOfArgs(c.Name))
+		w.AppendError(errKeysMsg)
+		return
+	}
+
+	result := s.storage.GetKeys()
+	w.AppendInlineString(strings.Join(result, ", "))
 }
 
-// getKeys получение элемента из кеша по ключу
-// curl -k -u user:pass http://localhost:8081/cache/key/<key>
+// getKey получение элемента из кеша по ключу
 func (s *Server) getElement(w resp.ResponseWriter, c *resp.Command) {
-	/*	key := c.Param("key")
+	if c.ArgN() != 1 {
+		w.AppendError(redeo.WrongNumberOfArgs(c.Name))
+		w.AppendError(errKeyMsg)
+		return
+	}
+	var (
+		key   = c.Arg(0).String()
+		value []byte
+	)
 
-		val, err := s.storage.GetElement(key)
+	val, err := s.storage.GetElement(key)
+	if err != nil {
+		w.AppendError(err.Error())
+		return
+	}
+
+	switch val.(type) {
+	case string, []string, map[string]string:
+		value, err = json.Marshal(val)
 		if err != nil {
-			c.JSON(
-				http.StatusBadRequest,
-				gin.H{"error": err.Error()}, //TODO Нельзя возвращать внутренние ошибки. Исправить в следующей реализации
-			)
+			w.AppendError(err.Error())
 			return
 		}
-
-		switch v := val.(type) {
-		case string, []string, map[string]string:
-			c.JSON(
-				http.StatusOK,
-				gin.H{"value": v},
-			)
-		default:
-			c.JSON(
-				http.StatusBadRequest,
-				gin.H{"error": errors.New("something wrong: type error")},
-			)
-		}
-	*/
+	default:
+		w.AppendError("something wrong: type error")
+		return
+	}
+	w.AppendInline(value)
 }
 
 // getInternalElement получение внутреннего элемента из списка (по индексу) или словаря (по ключу)
@@ -176,11 +194,9 @@ func (s *Server) setTTL(w resp.ResponseWriter, c *resp.Command) {
 }
 
 // set добавление или обновление ключа в кеше
-// curl -H 'content-type: application/json' -k -u user:pass -d '{ "value": "manu", "ttl": 5000 }' -X PUT http://localhost:8081/cache/set/string/<key>
 func (s *Server) set(w resp.ResponseWriter, c *resp.Command) {
 	if c.ArgN() < 3 {
 		w.AppendError(redeo.WrongNumberOfArgs(c.Name))
-		w.AppendInt(int64(c.ArgN()))
 		w.AppendError(errSetMsg)
 		return
 	}
@@ -223,12 +239,9 @@ func (s *Server) set(w resp.ResponseWriter, c *resp.Command) {
 
 	if isUpdated {
 		w.AppendError(fmt.Sprintf("key %s was updated", key))
-		return
 	} else {
 		w.AppendInlineString(fmt.Sprintf("key %s was set", key))
 	}
-
-	w.AppendOK()
 }
 
 /*func (s *Server) setSting(w resp.ResponseWriter, c *resp.Command) {
