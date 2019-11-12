@@ -2,10 +2,12 @@ package mapbased
 
 import (
 	"errors"
+	"fmt"
 	"github.com/geraev/gokvserver/structs"
 	"math"
 	"reflect"
 	"sort"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -543,3 +545,67 @@ func TestStorage_SetTTL(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkStorage_PutOrUpdateString(b *testing.B) {
+	var testSet []string
+	for i := 0; i < 1024; i++ {
+		testSet = append(testSet, fmt.Sprintf("myTestKey_%d", i))
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		s := &Storage{
+			mx:   storg.mx,
+			data: storg.data,
+		}
+		b.StartTimer()
+		for _, elem := range testSet {
+			s.PutOrUpdateString(elem, "Benchmark")
+		}
+	}
+}
+
+func BenchmarkStorage_RemoveElement(b *testing.B) {
+	var testSet []string
+	for i := 0; i < 1024; i++ {
+		testSet = append(testSet, strconv.Itoa(i))
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		s := &Storage{
+			mx:   storg.mx,
+			data: storg.data,
+		}
+		for _, elem := range testSet {
+			s.PutOrUpdateString(elem, "Benchmark")
+		}
+		b.StartTimer()
+		for _, elem := range testSet {
+			s.RemoveElement(elem)
+		}
+	}
+}
+
+func BenchmarkStorage_GetElement(b *testing.B) {
+	var testSet []string
+	for i := 0; i < 1024; i++ {
+		testSet = append(testSet, strconv.Itoa(i))
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		s := &Storage{
+			mx:   storg.mx,
+			data: storg.data,
+		}
+		for _, elem := range testSet {
+			s.PutOrUpdateString(elem, "Benchmark")
+		}
+		b.StartTimer()
+		for _, elem := range testSet {
+			_, _ = s.GetElement(elem)
+		}
+	}
+}
+
