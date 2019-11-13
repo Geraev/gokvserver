@@ -15,7 +15,7 @@ import (
 
 var (
 	storg = Storage{
-		mx: &sync.RWMutex{},
+		RWMutex: &sync.RWMutex{},
 		data: map[string]interface{}{
 			"keyForStr1": "ValueString_1",
 			"keyForStr2": "ValueString_2",
@@ -47,8 +47,8 @@ func TestStorage_GetKeys(t *testing.T) {
 		{
 			name: "Testing GetElement: return empty list",
 			fields: Storage{
-				mx:   &sync.RWMutex{},
-				data: map[string]interface{}{},
+				RWMutex: &sync.RWMutex{},
+				data:    map[string]interface{}{},
 			},
 			want: []string{},
 		},
@@ -56,8 +56,8 @@ func TestStorage_GetKeys(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Storage{
-				mx:   tt.fields.mx,
-				data: tt.fields.data,
+				RWMutex: tt.fields.RWMutex,
+				data:    tt.fields.data,
 			}
 			sort.Strings(tt.want)
 			if got := s.GetKeys(); !reflect.DeepEqual(got, tt.want) {
@@ -112,7 +112,7 @@ func TestStorage_GetElement(t *testing.T) {
 		{
 			name: "Testing GetElement: failed type",
 			fields: Storage{
-				mx: &sync.RWMutex{},
+				RWMutex: &sync.RWMutex{},
 				data: map[string]interface{}{
 					"key_01": struct {
 						Int int
@@ -129,8 +129,8 @@ func TestStorage_GetElement(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Storage{
-				mx:   tt.fields.mx,
-				data: tt.fields.data,
+				RWMutex: tt.fields.RWMutex,
+				data:    tt.fields.data,
 			}
 			got, err := s.GetElement(tt.args.key)
 			if (err != nil) != tt.wantErr {
@@ -195,8 +195,8 @@ func TestStorage_GetListElement(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Storage{
-				mx:   tt.fields.mx,
-				data: tt.fields.data,
+				RWMutex: tt.fields.RWMutex,
+				data:    tt.fields.data,
 			}
 			got, err := s.GetListElement(tt.args.key, tt.args.index)
 			if (err != nil) != tt.wantErr {
@@ -254,8 +254,8 @@ func TestStorage_GetDictionaryElement(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Storage{
-				mx:   tt.fields.mx,
-				data: tt.fields.data,
+				RWMutex: tt.fields.RWMutex,
+				data:    tt.fields.data,
 			}
 			got, err := s.GetDictionaryElement(tt.args.key, tt.args.internalKey)
 			if (err != nil) != tt.wantErr {
@@ -299,8 +299,8 @@ func TestStorage_PutOrUpdateDictionary(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Storage{
-				mx:   tt.fields.mx,
-				data: tt.fields.data,
+				RWMutex: tt.fields.RWMutex,
+				data:    tt.fields.data,
 			}
 			gotPreviousVal, gotIsUpdated := s.PutOrUpdateDictionary(tt.args.key, tt.args.value)
 			if !reflect.DeepEqual(gotPreviousVal, tt.wantPreviousVal) {
@@ -343,8 +343,8 @@ func TestStorage_PutOrUpdateList(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Storage{
-				mx:   tt.fields.mx,
-				data: tt.fields.data,
+				RWMutex: tt.fields.RWMutex,
+				data:    tt.fields.data,
 			}
 			sort.Strings(tt.wantPreviousVal)
 			gotPreviousVal, gotIsUpdated := s.PutOrUpdateList(tt.args.key, tt.args.value)
@@ -388,8 +388,8 @@ func TestStorage_PutOrUpdateString(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Storage{
-				mx:   tt.fields.mx,
-				data: tt.fields.data,
+				RWMutex: tt.fields.RWMutex,
+				data:    tt.fields.data,
 			}
 			gotPreviousVal, gotIsUpdated := s.PutOrUpdateString(tt.args.key, tt.args.value)
 			if gotPreviousVal != tt.wantPreviousVal {
@@ -444,7 +444,7 @@ func TestStorage_GetType(t *testing.T) {
 		{
 			name: "Testing GetType: failed type",
 			fields: Storage{
-				mx: &sync.RWMutex{},
+				RWMutex: &sync.RWMutex{},
 				data: map[string]interface{}{
 					"key_01": struct {
 						Int int
@@ -461,11 +461,11 @@ func TestStorage_GetType(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Storage{
-				mx:   tt.fields.mx,
-				data: tt.fields.data,
+				RWMutex: tt.fields.RWMutex,
+				data:    tt.fields.data,
 			}
 			got, err := s.GetType(tt.args.key)
-			if  !reflect.DeepEqual(err, tt.wantErr) {
+			if !reflect.DeepEqual(err, tt.wantErr) {
 				t.Errorf("GetType() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
@@ -494,8 +494,8 @@ func TestStorage_RemoveElement(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Storage{
-				mx:   tt.fields.mx,
-				data: tt.fields.data,
+				RWMutex: tt.fields.RWMutex,
+				data:    tt.fields.data,
 			}
 			s.RemoveElement(tt.args.key)
 			_, err := s.GetElement(tt.args.key)
@@ -528,15 +528,15 @@ func TestStorage_SetTTL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Storage{
-				mx:   tt.fields.mx,
-				data: tt.fields.data,
+				RWMutex: tt.fields.RWMutex,
+				data:    tt.fields.data,
 			}
 			_, gotIsUpdated := s.PutOrUpdateString(tt.args.key, "gocache")
 			if gotIsUpdated != false {
 				t.Errorf("PutOrUpdateString() gotIsUpdated = %v, want %v", gotIsUpdated, false)
 			}
 			s.SetTTL(tt.args.key, tt.args.keyTTL)
-			time.Sleep(time.Duration(math.Round(float64(tt.args.keyTTL) * 1.2)) * time.Millisecond)
+			time.Sleep(time.Duration(math.Round(float64(tt.args.keyTTL)*1.2)) * time.Millisecond)
 			_, err := s.GetElement(tt.args.key)
 			if reflect.DeepEqual(err, interface{}(nil)) {
 				t.Errorf("GetElement() error = %+v, wantErr %v", err, nil)
@@ -555,8 +555,8 @@ func BenchmarkStorage_PutOrUpdateString(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 		s := &Storage{
-			mx:   storg.mx,
-			data: storg.data,
+			RWMutex: storg.RWMutex,
+			data:    storg.data,
 		}
 		b.StartTimer()
 		for _, elem := range testSet {
@@ -574,8 +574,8 @@ func BenchmarkStorage_RemoveElement(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 		s := &Storage{
-			mx:   storg.mx,
-			data: storg.data,
+			RWMutex: storg.RWMutex,
+			data:    storg.data,
 		}
 		for _, elem := range testSet {
 			s.PutOrUpdateString(elem, "Benchmark")
@@ -596,8 +596,8 @@ func BenchmarkStorage_GetElement(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 		s := &Storage{
-			mx:   storg.mx,
-			data: storg.data,
+			RWMutex: storg.RWMutex,
+			data:    storg.data,
 		}
 		for _, elem := range testSet {
 			s.PutOrUpdateString(elem, "Benchmark")
@@ -608,4 +608,3 @@ func BenchmarkStorage_GetElement(b *testing.B) {
 		}
 	}
 }
-

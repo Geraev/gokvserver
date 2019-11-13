@@ -9,7 +9,7 @@ import (
 )
 
 type Storage struct {
-	mx      *sync.RWMutex
+	*sync.RWMutex
 	data    map[string]interface{}
 	expired map[string]uint64
 	janitor *janitor
@@ -17,7 +17,7 @@ type Storage struct {
 
 func NewStorage() *Storage {
 	s := &Storage{
-		mx:      new(sync.RWMutex),
+		RWMutex: new(sync.RWMutex),
 		data:    make(map[string]interface{}),
 		expired: make(map[string]uint64),
 	}
@@ -31,7 +31,7 @@ func NewStorage() *Storage {
 
 func TestTestStorage() *Storage {
 	return &Storage{
-		mx: new(sync.RWMutex),
+		RWMutex: new(sync.RWMutex),
 		data: map[string]interface{}{
 			"keyForStr1": "ValueString_1",
 			"keyForStr2": "ValueString_2",
@@ -46,8 +46,8 @@ func TestTestStorage() *Storage {
 
 // GetKeys получение списка ключей
 func (s *Storage) GetKeys() []string {
-	s.mx.RLock()
-	defer s.mx.RUnlock()
+	s.RLock()
+	defer s.RUnlock()
 
 	if len(s.data) == 0 {
 		return []string{}
@@ -63,8 +63,8 @@ func (s *Storage) GetKeys() []string {
 
 // GetElement получение элемента по ключу
 func (s *Storage) GetElement(key string) (interface{}, error) {
-	s.mx.RLock()
-	defer s.mx.RUnlock()
+	s.RLock()
+	defer s.RUnlock()
 
 	val, ok := s.data[key]
 	if !ok {
@@ -85,8 +85,8 @@ func (s *Storage) GetElement(key string) (interface{}, error) {
 
 // GetListElement получение по индексу одного элемента из списка
 func (s *Storage) GetListElement(key string, index int) (string, error) {
-	s.mx.RLock()
-	defer s.mx.RUnlock()
+	s.RLock()
+	defer s.RUnlock()
 
 	if index < 0 {
 		return "", errors.New("index out of range")
@@ -111,8 +111,8 @@ func (s *Storage) GetListElement(key string, index int) (string, error) {
 
 // GetDictionaryElement получение по ключу одного элемента из словаря
 func (s *Storage) GetDictionaryElement(key, internalKey string) (string, error) {
-	s.mx.RLock()
-	defer s.mx.RUnlock()
+	s.RLock()
+	defer s.RUnlock()
 
 	val, ok := s.data[key]
 	if !ok {
@@ -135,8 +135,8 @@ func (s *Storage) GetDictionaryElement(key, internalKey string) (string, error) 
 // PutOrUpdateString добавление либо обновление значения ключа. Если ключь уже существовал, то перавым аргументом
 // возвращается предыдущее значение ключа, а вторым аргументом возвращается true
 func (s *Storage) PutOrUpdateString(key, value string) (previousVal string, isUpdated bool) {
-	s.mx.Lock()
-	defer s.mx.Unlock()
+	s.Lock()
+	defer s.Unlock()
 
 	if val, ok := s.data[key]; ok {
 		previousVal = val.(string)
@@ -149,8 +149,8 @@ func (s *Storage) PutOrUpdateString(key, value string) (previousVal string, isUp
 // PutOrUpdateList добавление либо обновление значения ключа. Если ключь уже существовал, то перавым аргументом
 // возвращается предыдущее значение ключа, а вторым аргументом возвращается true
 func (s *Storage) PutOrUpdateList(key string, value []string) (previousVal []string, isUpdated bool) {
-	s.mx.Lock()
-	defer s.mx.Unlock()
+	s.Lock()
+	defer s.Unlock()
 
 	if val, ok := s.data[key]; ok {
 		previousVal = val.([]string)
@@ -164,8 +164,8 @@ func (s *Storage) PutOrUpdateList(key string, value []string) (previousVal []str
 // PutOrUpdateDictionary добавление либо обновление значения ключа. Если ключь уже существовал, то перавым аргументом
 // возвращается предыдущее значение ключа, а вторым аргументом возвращается true
 func (s *Storage) PutOrUpdateDictionary(key string, value map[string]string) (previousVal map[string]string, isUpdated bool) {
-	s.mx.Lock()
-	defer s.mx.Unlock()
+	s.Lock()
+	defer s.Unlock()
 
 	if val, ok := s.data[key]; ok {
 		previousVal = val.(map[string]string)
@@ -177,8 +177,8 @@ func (s *Storage) PutOrUpdateDictionary(key string, value map[string]string) (pr
 
 // RemoveElement удаление элемента по ключу
 func (s *Storage) RemoveElement(key string) {
-	s.mx.Lock()
-	defer s.mx.Unlock()
+	s.Lock()
+	defer s.Unlock()
 	delete(s.data, key)
 	return
 }
@@ -191,9 +191,9 @@ func (s *Storage) SetTTL(key string, keyTTL uint64) {
 		return
 	}
 	time.AfterFunc(time.Millisecond*time.Duration(keyTTL), func() {
-		s.mx.Lock()
+		s.Lock()
 		delete(s.data, key)
-		s.mx.Unlock()
+		s.Unlock()
 	})
 	return
 }
@@ -203,16 +203,16 @@ func (s *Storage) SetExpired(key string, expired uint64) {
 	if expired == 0 {
 		return
 	}
-	s.mx.Lock()
-	defer s.mx.Unlock()
+	s.Lock()
+	defer s.Unlock()
 	e := time.Now().Add(time.Millisecond * time.Duration(expired)).UnixNano()
 	s.expired[key] = uint64(e)
 }
 
 // DeleteExpired удаление просроченых кдючей
 func (s *Storage) DeleteExpired() {
-	s.mx.RLock()
-	defer s.mx.RUnlock()
+	s.Lock()
+	defer s.Unlock()
 
 	now := time.Now().UnixNano()
 	for key, expired := range s.expired {
@@ -224,8 +224,8 @@ func (s *Storage) DeleteExpired() {
 }
 
 func (s *Storage) GetType(key string) (structs.ValueType, error) {
-	s.mx.RLock()
-	defer s.mx.RUnlock()
+	s.RLock()
+	defer s.RUnlock()
 
 	val, ok := s.data[key]
 	if !ok {
