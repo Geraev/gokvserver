@@ -64,21 +64,20 @@ func (s *Storage) GetKeys() []string {
 // GetElement получение элемента по ключу
 func (s *Storage) GetElement(key string) (interface{}, error) {
 	s.RLock()
-	defer s.RUnlock()
+	//defer s.RUnlock()
 
 	val, ok := s.data[key]
 	if !ok {
-		return "", errors.New("key not found")
+		s.RUnlock()
+		return nil, errors.New("key not found")
 	}
 
 	switch v := val.(type) {
-	case string:
-		return v, nil
-	case []string:
-		return v, nil
-	case map[string]string:
+	case string, []string, map[string]string:
+		s.RUnlock()
 		return v, nil
 	default:
+		s.RUnlock()
 		return "", errors.New("something wrong: type error")
 	}
 }
@@ -136,13 +135,14 @@ func (s *Storage) GetDictionaryElement(key, internalKey string) (string, error) 
 // возвращается предыдущее значение ключа, а вторым аргументом возвращается true
 func (s *Storage) PutOrUpdateString(key, value string) (previousVal string, isUpdated bool) {
 	s.Lock()
-	defer s.Unlock()
+	//defer s.Unlock()
 
 	if val, ok := s.data[key]; ok {
 		previousVal = val.(string)
 		isUpdated = ok
 	}
 	s.data[key] = value
+	s.Unlock()
 	return previousVal, isUpdated
 }
 
@@ -150,7 +150,7 @@ func (s *Storage) PutOrUpdateString(key, value string) (previousVal string, isUp
 // возвращается предыдущее значение ключа, а вторым аргументом возвращается true
 func (s *Storage) PutOrUpdateList(key string, value []string) (previousVal []string, isUpdated bool) {
 	s.Lock()
-	defer s.Unlock()
+	//defer s.Unlock()
 
 	if val, ok := s.data[key]; ok {
 		previousVal = val.([]string)
@@ -158,6 +158,7 @@ func (s *Storage) PutOrUpdateList(key string, value []string) (previousVal []str
 	}
 	s.data[key] = value
 	sort.Strings(previousVal)
+	s.Unlock()
 	return previousVal, isUpdated
 }
 
@@ -165,21 +166,23 @@ func (s *Storage) PutOrUpdateList(key string, value []string) (previousVal []str
 // возвращается предыдущее значение ключа, а вторым аргументом возвращается true
 func (s *Storage) PutOrUpdateDictionary(key string, value map[string]string) (previousVal map[string]string, isUpdated bool) {
 	s.Lock()
-	defer s.Unlock()
+	//defer s.Unlock()
 
 	if val, ok := s.data[key]; ok {
 		previousVal = val.(map[string]string)
 		isUpdated = ok
 	}
 	s.data[key] = value
+	s.Unlock()
 	return previousVal, isUpdated
 }
 
 // RemoveElement удаление элемента по ключу
 func (s *Storage) RemoveElement(key string) {
 	s.Lock()
-	defer s.Unlock()
+	//defer s.Unlock()
 	delete(s.data, key)
+	s.Unlock()
 	return
 }
 
@@ -204,15 +207,17 @@ func (s *Storage) SetExpired(key string, expired uint64) {
 		return
 	}
 	s.Lock()
-	defer s.Unlock()
+	//defer s.Unlock()
 	e := time.Now().Add(time.Millisecond * time.Duration(expired)).UnixNano()
 	s.expired[key] = uint64(e)
+	s.Unlock()
+	return
 }
 
 // DeleteExpired удаление просроченых кдючей
 func (s *Storage) DeleteExpired() {
 	s.Lock()
-	defer s.Unlock()
+	//defer s.Unlock()
 
 	now := time.Now().UnixNano()
 	for key, expired := range s.expired {
@@ -221,6 +226,7 @@ func (s *Storage) DeleteExpired() {
 			delete(s.expired, key)
 		}
 	}
+	s.Unlock()
 }
 
 func (s *Storage) GetType(key string) (structs.ValueType, error) {

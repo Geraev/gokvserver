@@ -546,6 +546,9 @@ func TestStorage_SetTTL(t *testing.T) {
 	}
 }
 
+// Benchmarks
+// =============================================================================
+
 func BenchmarkStorage_PutOrUpdateString(b *testing.B) {
 	var testSet []string
 	for i := 0; i < 1024; i++ {
