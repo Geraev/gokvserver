@@ -30,7 +30,8 @@ func init() {
 
 func main() {
 	cache = mapbased.NewStorage()
-	tcpRun()
+	// tcpRun()
+	httpRun()
 }
 
 func httpRun() {
