@@ -7,6 +7,8 @@ import (
 	"github.com/geraev/gokvserver/structs"
 	"github.com/geraev/gokvserver/tcpserver"
 	"log"
+	"net/http"
+	_ "net/http/pprof"
 )
 
 var (
@@ -29,6 +31,9 @@ func init() {
 }
 
 func main() {
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
 	cache = mapbased.NewStorage()
 	// tcpRun()
 	httpRun()
